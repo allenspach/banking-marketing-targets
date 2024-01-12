@@ -76,15 +76,58 @@ tibble(variable=df %>% colnames,
 ```
 
 ```{r}
-df %>% 
-  rename(has_credit=default,
+#Rename of columns, encoding of binary features, remove other from poutcome
+##
+df %>%
+  
+  rename( # new names
+         has_credit=default,
          last_contact=day,
-         response=y) %>% 
-  mutate(response=ifelse(response=="yes",1,0),
-         housing=ifelse(housing=="yes",1,0),
+         housing_loan=housing,
+         response=y) %>%
+  
+  mutate( # binary logic
+         response=ifelse(response=="yes",1,0),
+         housing_loan=ifelse(housing_loan=="yes",1,0),
          loan=ifelse(loan=="yes",1,0),
          has_credit=ifelse(has_credit=="yes",1,0),
-         marital=ifelse(marital=="married",1,0),)
+         marital=ifelse(marital=="married",1,0),
+         employed=ifelse(job=="unemployed",0,1),
+         
+         poutcome=case_when( # change unknown for failure
+                            poutcome=="unknown" ~ "failure",
+                            poutcome=="failure" ~ "failure",
+                            poutcome=="other" ~ "other",
+                            poutcome=="success" ~ "success",),
+         
+         contact=case_when( # change unknown for others
+                            contact=="unknown" ~ "others",
+                            contact=="cellular" ~ "cellular",
+                            contact=="telephone" ~ "telephone",),
+         
+         month=case_when( # change names for numbers
+                         month=="jan" ~ 1,
+                         month=="feb" ~ 2,
+                         month=="mar" ~ 3,
+                         month=="apr" ~ 4,
+                         month=="may" ~ 5,
+                         month=="jun" ~ 6,
+                         month=="jul" ~ 7,
+                         month=="aug" ~ 8,
+                         month=="sep" ~ 9,
+                         month=="oct" ~ 10,
+                         month=="nov" ~ 11,
+                         month=="dez" ~ 12,)) %>%
+  
+  filter( # remove others from poutcome
+          poutcome!="other") %>%
+  
+  filter( # remove unknown from education
+          education!="unknown")
+```
+
+```{r}
+df %>% glimpse()
 ```
 
 ```{r}
@@ -92,12 +135,36 @@ df %>% select(education) %>% unique()
 ```
 
 ```{r}
-df %>% 
+#Rename of columns and encoding of binary features
+df_teste <- df %>% 
+  rename(has_credit=default,
+         last_contact=day,
+         response=y) %>% 
+  mutate(response=ifelse(response=="yes",1,0),
+         housing=ifelse(housing=="yes",1,0),
+         loan=ifelse(loan=="yes",1,0),
+         has_credit=ifelse(has_credit=="yes",1,0),
+         marital=ifelse(marital=="married",1,0),
+         poutcome=case_when(poutcome=="unknown" ~ "failure",
+                            poutcome=="failure" ~ "failure",
+                            poutcome=="other" ~ "other",
+                            poutcome=="success" ~ "success",))
+
+df_teste %>% 
   select(poutcome) %>% 
   count(poutcome) %>% 
   rename(contagem = n) %>% 
   mutate(prop=contagem/sum(contagem)*100) %>% 
   select(poutcome,prop)
+```
+
+```{r}
+df %>% 
+  select(month) %>% 
+  count(month) %>% 
+  rename(contagem = n) %>% 
+  mutate(prop=contagem/sum(contagem)*100) %>% 
+  select(month,prop)
 ```
 
 # 3- EDA (Exploratory Data Analysis)
@@ -110,8 +177,16 @@ df %>%
 
 # 7- Rascunhos
 
--   Transformar o mes do ano em numeral
+-   OK Transformar o mes do ano em numeral
 
--   Coluna default, housing e loan: 1 para "yes" e 0 para "no"
+-   OK Coluna default, housing e loan: 1 para "yes" e 0 para "no"
 
--   Remover education = unknown
+-   OK Remover education = unknown (apenas 4% dos dados)
+
+-   OK Poutcome (80% unknown mudar para failure)
+
+-   Duration e pday (serparar em grupos)
+
+-   Previous (se foi ou nao contatado antes da campanha 0=nao)
+
+-   poutcome para binario (0 e 1)
