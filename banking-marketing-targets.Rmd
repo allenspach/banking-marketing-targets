@@ -190,3 +190,5 @@ df %>%
 -   Previous (se foi ou nao contatado antes da campanha 0=nao)
 
 -   poutcome para binario (0 e 1)
+
+-   encoding de frequencia e de label para variaveis categoricas
